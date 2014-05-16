@@ -2,7 +2,6 @@ package net.eitr.fractaltree.screens;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -43,7 +42,6 @@ public class MainScreen implements Screen
 	@Override
 	public void render(float delta)
 	{
-
 		for (int i = 0; i < slider.length; i++)
 		{	
 			labelCur[i].setText((int)slider[i].getValue()+"");
@@ -151,9 +149,9 @@ public class MainScreen implements Screen
 			labelMax[i] = new Label((int)slider[i].getMaxValue()+"",skin);
 			labelCur[i] = new Label(" ",skin);
 
-			labelMin[i].setAlignment(Align.left);
-			labelMax[i].setAlignment(Align.right);
-			labelCur[i].setAlignment(Align.center);
+            labelMin[i].setAlignment(Align.left);
+            labelMax[i].setAlignment(Align.right);
+            labelCur[i].setAlignment(Align.center);
 			
 			slider[i].setWidth(300);
 			
@@ -174,15 +172,27 @@ public class MainScreen implements Screen
 		}
 
 		
-		TextButton b = new TextButton("Create", skin);
-		b.addCaptureListener(new ChangeListener() {
-			@Override
-			public void changed(ChangeEvent event, Actor actor)
-			{
-				create();
-			}
-		});
-		table.add(b).colspan(3).center();
+		TextButton startButton = new TextButton("Create", skin);
+		startButton.addCaptureListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor)
+            {
+                create();
+            }
+        });
+        table.add(startButton).colspan(2).left();
+        
+        TextButton exitButton = new TextButton("Quit", skin);
+        exitButton.addCaptureListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor)
+            {
+                Gdx.app.exit();
+            }
+        });
+        table.add(exitButton).colspan(3).center();
+        
+		
 		
 		table.left().padLeft(20);
 		stage.addActor(table);
@@ -220,7 +230,7 @@ public class MainScreen implements Screen
 	private void draw ()
 	{
 		killCount = -1;
-		killCountMax = 100000;
+		killCountMax = 1000000;
 		drawCircles = false;
 
 		xList = new double[killCountMax];
