@@ -1,14 +1,15 @@
 package net.eitr.fractaltree.screens;
 
+import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Slider;
@@ -22,7 +23,6 @@ public class MainScreen implements Screen
 {
 	Stage stage;
 	Table table;
-	BitmapFont font;
     Skin skin;
     SpriteBatch batch;
     Slider slider [];
@@ -38,6 +38,10 @@ public class MainScreen implements Screen
 	int killCount, killCountMax;
 	boolean drawCircles;
 	double xList[],yList[],nxList[],nyList[],thickList[],colorList[];
+	boolean leafNode[];
+	
+	
+	Dialog loadDialog, infoDialog;
 	
 	@Override
 	public void render(float delta)
@@ -56,10 +60,15 @@ public class MainScreen implements Screen
 //			draw();
 			for (int i = 0; i < killCountMax; i ++)
 			{
-//				sr.setColor((int)(Math.random()*50)+200, (int)(Math.random()*50)+200, (int)(Math.random()*50)+200, 1);
-//				sr.setColor((float)Math.random(),(float)Math.random(),(float)Math.random(),1);
 				sr.setColor((float)colorList[i],(float)colorList[i],(float)colorList[i],1);
-				sr.rectLine((float)xList[i], (float)yList[i], (float)nxList[i], (float)nyList[i], (float)thickList[i]);
+				if (leafNode[i])
+				{
+					sr.ellipse((float)xList[i], (float)yList[i],  (float)nxList[i], (float)nyList[i]);
+				}
+				else
+				{
+					sr.rectLine((float)xList[i], (float)yList[i], (float)nxList[i], (float)nyList[i], (float)thickList[i]);
+				}
 			}
 			sr.end();
 //			drawTree = false;
@@ -67,8 +76,9 @@ public class MainScreen implements Screen
 		
 		stage.act();
 		stage.draw();
-		batch.begin();
-		batch.end();
+		
+//		batch.begin();
+//		batch.end();
 		
 	}
 
@@ -87,7 +97,6 @@ public class MainScreen implements Screen
 		batch = new SpriteBatch();
 		stage = new Stage(new ScreenViewport());
 		Gdx.input.setInputProcessor(stage);
-		font = new BitmapFont();
 		table = new Table(skin);
 		table.setBounds(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 //		table.defaults();
@@ -97,11 +106,13 @@ public class MainScreen implements Screen
 		
 		menuX = 10; menuY = 10;
 		
-		slider = new Slider[12];
-		labelMin = new Label[12];
-		labelMax = new Label[12];
-		labelSlider = new Label[12];
-		labelCur = new Label[12];
+		int totalActors = 13;
+		
+		slider = new Slider[totalActors];
+		labelMin = new Label[totalActors];
+		labelMax = new Label[totalActors];
+		labelSlider = new Label[totalActors];
+		labelCur = new Label[totalActors];
 
 		slider[0] = new Slider(10,Gdx.graphics.getWidth(),10,false,skin);
 		slider[1] = new Slider(10,Gdx.graphics.getHeight(),10,false,skin);
@@ -115,11 +126,12 @@ public class MainScreen implements Screen
 		slider[9] = new Slider(0,6,1,false,skin);
 		slider[10] = new Slider(1,300,1,false,skin);
 		slider[11] = new Slider(1,64,1,false,skin);
+		slider[12] = new Slider(1,200,1,false,skin);
 
 		slider[0].setValue(900);
 		slider[1].setValue(10);
 		slider[2].setValue(8);
-		slider[3].setValue(16);
+		slider[3].setValue(14);
 		slider[4].setValue(75);
 		slider[5].setValue(85);
 		slider[6].setValue(10);
@@ -128,6 +140,7 @@ public class MainScreen implements Screen
 		slider[9].setValue(3);
 		slider[10].setValue(160);
 		slider[11].setValue(16);
+		slider[12].setValue(100);
 
 		labelSlider[0] = new Label("Location - X",skin);
 		labelSlider[1] = new Label("Location - Y",skin);
@@ -141,6 +154,7 @@ public class MainScreen implements Screen
 		labelSlider[9] = new Label("Branches - Max",skin);
 		labelSlider[10] = new Label("Start Length",skin);
 		labelSlider[11] = new Label("Start Width",skin);
+		labelSlider[12] = new Label("Memory Usage",skin);
 
 		
 		for (int i = 0; i < slider.length; i++)
@@ -154,6 +168,7 @@ public class MainScreen implements Screen
             labelCur[i].setAlignment(Align.center);
 			
 			slider[i].setWidth(300);
+			slider[i].setName("Slider"+i);
 			
 			table.add(labelSlider[i]).colspan(3).center().row();
 			table.add(slider[i]).colspan(3).fillX().row();
@@ -161,14 +176,18 @@ public class MainScreen implements Screen
 			table.add(labelCur[i]).center();
 			table.add(labelMax[i]).right();
 			table.row();
+			
+			
 
-//			slider[i].addCaptureListener(new ChangeListener() {
-//				@Override
-//				public void changed(ChangeEvent event, Actor actor)
-//				{
-////					Gdx.graphics.requestRendering();
-//				}
-//			});
+			if (i >= 2 && i <= 9)
+				slider[i].addCaptureListener(new ChangeListener() {
+					@Override
+					public void changed(ChangeEvent event, Actor actor)
+					{
+						checkMinMax(actor.getName());
+						
+					}
+				});
 		}
 
 		
@@ -180,8 +199,19 @@ public class MainScreen implements Screen
                 create();
             }
         });
-        table.add(startButton).colspan(2).left();
+        table.add(startButton).colspan(2);
         
+        TextButton infoButton = new TextButton("Info", skin);
+        infoButton.addCaptureListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor)
+            {
+//                ((Game)Gdx.app.getApplicationListener()).setScreen(new InfoScreen());
+            	infoDialog.show(stage);
+            }
+        });
+        table.add(infoButton);
+
         TextButton exitButton = new TextButton("Quit", skin);
         exitButton.addCaptureListener(new ChangeListener() {
             @Override
@@ -190,17 +220,89 @@ public class MainScreen implements Screen
                 Gdx.app.exit();
             }
         });
-        table.add(exitButton).colspan(3).center();
+//        table.add(exitButton);
         
+        
+        loadDialog = new Dialog("Loading...", skin);
+        infoDialog = new Dialog("Info",skin);
+        Label infoLabel [] = new Label[13];
+
+        infoLabel[0] = new Label("Location: Set horizontal position of tree on the screen.",skin);
+        infoLabel[1] = new Label("Size: Approximate number of branches from root to tip.",skin);
+        infoLabel[2] = new Label("Scale (%): Size factor of new branch based on previous one.",skin);
+        infoLabel[3] = new Label("Angle (%): Amount of turn for next branch. 0 = parallel, 50% = perpendicular.",skin);
+        infoLabel[4] = new Label("Branches: Amount of branches to create off the previous one.",skin);
+        infoLabel[5] = new Label("Start Length: Distance of root branch. Affects height of tree.",skin);
+        infoLabel[6] = new Label("Start Width: Size of the trunk. New branches are proportionately smaller.",skin);
+        infoLabel[7] = new Label("Memory Usage: Total number of branches allowed to be created. (in thousands)",skin);
+        infoLabel[8] = new Label("",skin);
+		infoLabel[9] = new Label("If the tree is curved and only one sided, it is creating too many branches,",skin);
+		infoLabel[10] = new Label("thus runs out of memory to create the rest. This saves your computer from crashing.",skin);
+		infoLabel[11] = new Label("Try reducing the max size of the tree or how many branches it is trying to create.",skin);
+		infoLabel[11] = new Label("",skin);
+		infoLabel[12] = new Label("If it takes too long to load, try reducing memory usage. It's only needed for bushier trees.",skin);
 		
+		infoDialog.row();
+		for (int i = 0; i < infoLabel.length; i++)
+		{
+			infoDialog.add(infoLabel[i]).center().row();
+		}
+        
+        
+        TextButton closeDialog = new TextButton("Close", skin);
+        closeDialog.addCaptureListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor)
+            {
+                infoDialog.hide();
+            }
+        });
+        infoDialog.add(closeDialog);
+		Dialog.fadeDuration = 0f;		
 		
 		table.left().padLeft(20);
 		stage.addActor(table);
+		create();
 	}
+	
+	private void checkMinMax (String name)
+	{
+		int i = Integer.parseInt(name.substring(6));
+		switch (i)
+		{
+			case 2: if (slider[2].getValue() > slider[3].getValue())
+				slider[3].setValue(slider[2].getValue());
+			break;
+			case 3: if (slider[2].getValue() > slider[3].getValue())
+				slider[2].setValue(slider[3].getValue());
+			break;
+			case 4: if (slider[4].getValue() > slider[5].getValue())
+				slider[5].setValue(slider[4].getValue());
+			break;
+			case 5: if (slider[4].getValue() > slider[5].getValue())
+				slider[4].setValue(slider[5].getValue());
+			break;
+			case 6: if (slider[6].getValue() > slider[7].getValue())
+				slider[7].setValue(slider[6].getValue());
+			break;
+			case 7: if (slider[6].getValue() > slider[7].getValue())
+				slider[6].setValue(slider[7].getValue());
+			break;
+			case 8: if (slider[8].getValue() > slider[9].getValue())
+				slider[9].setValue(slider[8].getValue());
+			break;
+			case 9: if (slider[8].getValue() > slider[9].getValue())
+				slider[8].setValue(slider[9].getValue());
+			break;
+			default: assert false; break;
+		}
+	}
+	
 
 	@Override
 	public void hide()
 	{
+		dispose();
 	}
 
 	@Override
@@ -218,19 +320,23 @@ public class MainScreen implements Screen
 	{
 		stage.dispose();
 		skin.dispose();
+		batch.dispose();
+		sr.dispose();
 	}
 
 	public void create ()
 	{
 		drawTree = false;
+		loadDialog.show(stage);
 		draw();
+		loadDialog.hide();
 		drawTree = true;
 	}
 	
 	private void draw ()
 	{
 		killCount = -1;
-		killCountMax = 1000000;
+		killCountMax = (int)slider[12].getValue()*1000;
 		drawCircles = false;
 
 		xList = new double[killCountMax];
@@ -239,6 +345,7 @@ public class MainScreen implements Screen
 		nyList = new double[killCountMax];
 		thickList = new double[killCountMax];
 		colorList = new double[killCountMax];
+		leafNode = new boolean[killCountMax];
 		
 		drawRecursive(slider[10].getValue(), slider[0].getValue(), slider[1].getValue(), Math.PI/2, slider[11].getValue());
 	}
@@ -263,12 +370,29 @@ public class MainScreen implements Screen
 		{
 //			if(drawCircles)
 //				sr.ellipse((int)x,(int)y, (int)(Math.random()*6), (int)(Math.random()*6));
+
+			xList[killCount] = x;
+			yList[killCount] = y;
+			nxList[killCount] = Math.random()*4+1;
+			nyList[killCount] = Math.random()*4+1;
+			thickList[killCount] = thickness;
+			colorList[killCount] = Math.random()*.5+.5;
+			leafNode[killCount] = true;
+			
 			return;
 		}
 		if (  maxLength * Math.pow(Math.random()*(scaleMax/100.-scaleMin/100.)+scaleMin/100., Math.random()*(sizeMax-sizeMin+1)+sizeMin) > length )
 		{
 //			if(drawCircles)
 //				g.drawOval((int)x,(int)y, (int)(Math.random()*6), (int)(Math.random()*6));
+
+			xList[killCount] = x;
+			yList[killCount] = y;
+			nxList[killCount] = Math.random()*4+1;
+			nyList[killCount] = Math.random()*4+1;
+			thickList[killCount] = thickness;
+			colorList[killCount] = Math.random()*.5+.5;
+			leafNode[killCount] = true;
 			return;
 		}
 		
@@ -299,6 +423,7 @@ public class MainScreen implements Screen
 		nyList[killCount] = ny;
 		thickList[killCount] = thickness;
 		colorList[killCount] = Math.random()*.5+.5;
+		leafNode[killCount] = false;
 		
 		double scale = (Math.random()*(scaleMax/100.-scaleMin/100.)+scaleMin/100.);
 		
