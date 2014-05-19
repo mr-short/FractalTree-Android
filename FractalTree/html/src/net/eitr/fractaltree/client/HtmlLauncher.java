@@ -1,21 +1,25 @@
 package net.eitr.fractaltree.client;
 
+import net.eitr.fractaltree.FractalTree;
+
 import com.badlogic.gdx.ApplicationListener;
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.gwt.GwtApplication;
 import com.badlogic.gdx.backends.gwt.GwtApplicationConfiguration;
-import net.eitr.fractaltree.FractalTree;
 
 public class HtmlLauncher extends GwtApplication {
 
         @Override
-        public GwtApplicationConfiguration getConfig () {
+        public GwtApplicationConfiguration getConfig () 
+        {
 //            return new GwtApplicationConfiguration(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-            return new GwtApplicationConfiguration(1600, 900);
+            GwtApplicationConfiguration config = new GwtApplicationConfiguration(1500, 700);
+            config.fps = 4;
+            return config;
         }
 
         @Override
-        public ApplicationListener getApplicationListener () {
+        public ApplicationListener getApplicationListener () 
+        {
                 return new FractalTree();
         }
 }

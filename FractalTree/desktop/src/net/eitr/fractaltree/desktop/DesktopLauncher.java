@@ -11,8 +11,10 @@ public class DesktopLauncher
 	{
 		LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
 //		config.fullscreen = true;
-		config.width = 1600;
-		config.height = 900;
+		config.foregroundFPS = 4;
+		config.backgroundFPS = -1;
+		config.width = 1500;
+		config.height = 700;
 		new LwjglApplication(new FractalTree(), config);
 	}
 }
